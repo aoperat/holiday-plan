@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>휴가 계획 작성 페이지</title>
+    <style>
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .day {
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .dayOfWeek {
+            font-weight: bold;
+        }
+
+        .vacation-0 {
+            background-color: #ff0;
+        }
+
+        .vacation-1 {
+            background-color: #f80;
+        }
+
+        .public-holiday,
+        .weekend.sun {
+            color: #f00;
+        }
+
+        .weekend.sat {
+            color: #00f;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>휴가 계획 작성</h1>
+    <div id="calendar" class="calendar"></div>
+    <h2>선택한 휴가일</h2>
+    <ul id="vacationDaysList"></ul>
+
+    <script>
+        var daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+        var publicHolidays = {
+            '1-1': '신정',
+            '1-31': '설날',
+            '2-1': '설날',
+            '3-1': '삼일절',
+            '5-5': '어린이날',
+            '5-17': '석가탄신일',
+            '6-6': '현충일',
+            '8-15': '광복절',
+            '9-28': '추석(첫째 날)',
+            '9-29': '추석(당일)',
+            '9-30': '추석(셋째 날)',
+            '10-3': '개천절',
+            '10-9': '한글날',
+            '12-25': '크리스마스'
+        };
+
+
+        var today = new Date();
+        var year = today.getFullYear();
+        var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
+            daysInMonth[1] = 29;
+        }
+
+        var calendar = document.getElementById('calendar');
+        var vacationDaysList = document.getElementById('vacationDaysList');
+        var vacationDays = {};
+
+        for (var i = 0; i < daysOfWeek.length; i++) {
+            var div = document.createElement('div');
+            div.innerText = daysOfWeek[i];
+            div.classList.add('day', 'dayOfWeek');
+            if (i == 0) div.classList.add('weekend', 'sun');
+            if (i == 6) div.classList.add('weekend', 'sat');
+            calendar.appendChild(div);
+        }
+
+        for (var month = 0; month < 12; month++) {
+            for (var day = 1; day <= daysInMonth[month]; day++) {
+                var div = document.createElement('div');
+                div.classList.add('day');
+                div.innerText = (month + 1) + '월 ' + day + '일';
+                div.dataset.date = (month + 1) + '-' + day;
+                if (publicHolidays[div.dataset.date]) {
+                    div.classList.add('public-holiday');
+                    div.innerText += ' (' + publicHolidays[div.dataset.date] + ')';
+                }
+
+                if ([0, 6].includes(new Date(year, month, day).getDay())) {
+                    div.classList.add('weekend');
+                    if (new Date(year, month, day).getDay() == 0) div.classList.add('sun');
+                    if (new Date(year, month, day).getDay() == 6) div.classList.add('sat');
+                }
+                if (!div.classList.contains('public-holiday') && !div.classList.contains('weekend')) {
+                    div.addEventListener('click', function () {
+                        var date = this.dataset.date;
+                        if (vacationDays[date]) {
+                            delete vacationDays[date];
+                            this.classList.remove('vacation-1');
+                        } else if (this.classList.contains('vacation-0')) {
+                            vacationDays[date] = true;
+                            this.classList.remove('vacation-0');
+                            this.classList.add('vacation-1');
+                        } else {
+                            this.classList.add('vacation-0');
+                        }
+                        updateVacationDaysList();
+                    });
+                }
+                calendar.appendChild(div);
+            }
+        }
+
+        function updateVacationDaysList() {
+            vacationDaysList.innerHTML = '';
+            for (var date in vacationDays) {
+                var li = document.createElement('li');
+                li.innerText = date + ' (1일)';
+                vacationDaysList.appendChild(li);
+            }
+            var halfDays = Array.from(calendar.getElementsByClassName('vacation-0'));
+            for (var i = 0; i < halfDays.length; i++) {
+                var li = document.createElement('li');
+                li.innerText = halfDays[i].dataset.date + ' (0.5일)';
+                vacationDaysList.appendChild(li);
+            }
+        }
+    </script>
+</body>
+
+</html>
